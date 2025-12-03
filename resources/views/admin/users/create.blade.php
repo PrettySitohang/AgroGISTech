@@ -1,56 +1,71 @@
-@extends('layouts.app_dashboard')
-
-@section('page_title', 'Tambah Pengguna Baru')
+@extends('admin.layouts.app')
 
 @section('content')
-    <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Form Tambah Pengguna</h2>
+<div class="space-y-6">
+    <h2 class="text-3xl font-extrabold text-cream-text light:text-light-text">Tambah Pengguna Baru</h2>
+    <p class="text-gray-400 light:text-gray-600">Isi detail di bawah ini untuk mendaftarkan akun pengguna baru.</p>
+
+    {{-- Card Form --}}
+    <div class="bg-bg-dark light:bg-white rounded-xl p-8 shadow-xl border border-sienna/50 light:border-gray-200">
 
         <form action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
             @csrf
 
-            <!-- Nama -->
+            {{-- Nama Lengkap --}}
             <div>
-                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Lengkap</label>
-                <input id="name" name="name" type="text" required value="{{ old('name') }}"
-                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-amber-500 focus:border-amber-500 @error('name') border-red-500 @enderror">
-                @error('name')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                <label for="name" class="block text-sm font-medium text-cream-text light:text-light-text mb-1">Nama Lengkap *</label>
+                <input type="text" id="name" name="name" required value="{{ old('name') }}"
+                       class="w-full px-4 py-2 border border-sienna/70 rounded-lg bg-bg-dark text-cream-text focus:ring-terracotta focus:border-terracotta light:bg-white light:border-gray-300 light:text-light-text @error('name') border-red-500 @enderror">
+                @error('name')<p class="mt-2 text-sm text-terracotta">{{ $message }}</p>@enderror
             </div>
 
-            <!-- Email -->
+            {{-- Alamat Email --}}
             <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                <input id="email" name="email" type="email" required value="{{ old('email') }}"
-                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-amber-500 focus:border-amber-500 @error('email') border-red-500 @enderror">
-                @error('email')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                <label for="email" class="block text-sm font-medium text-cream-text light:text-light-text mb-1">Alamat Email *</label>
+                <input type="email" id="email" name="email" required value="{{ old('email') }}"
+                       class="w-full px-4 py-2 border border-sienna/70 rounded-lg bg-bg-dark text-cream-text focus:ring-terracotta focus:border-terracotta light:bg-white light:border-gray-300 light:text-light-text @error('email') border-red-500 @enderror">
+                @error('email')<p class="mt-2 text-sm text-terracotta">{{ $message }}</p>@enderror
             </div>
 
-            <!-- Kata Sandi -->
+            {{-- Password --}}
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kata Sandi</label>
-                <input id="password" name="password" type="password" required
-                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-amber-500 focus:border-amber-500 @error('password') border-red-500 @enderror">
-                @error('password')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                <label for="password" class="block text-sm font-medium text-cream-text light:text-light-text mb-1">Password *</label>
+                <input type="password" id="password" name="password" required
+                       class="w-full px-4 py-2 border border-sienna/70 rounded-lg bg-bg-dark text-cream-text focus:ring-terracotta focus:border-terracotta light:bg-white light:border-gray-300 light:text-light-text @error('password') border-red-500 @enderror">
+                @error('password')<p class="mt-2 text-sm text-terracotta">{{ $message }}</p>@enderror
             </div>
 
-            <!-- Peran (Role) -->
+            {{-- Konfirmasi Password --}}
             <div>
-                <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Peran Sistem</label>
+                <label for="password_confirmation" class="block text-sm font-medium text-cream-text light:text-light-text mb-1">Konfirmasi Password *</label>
+                <input type="password" id="password_confirmation" name="password_confirmation" required
+                       class="w-full px-4 py-2 border border-sienna/70 rounded-lg bg-bg-dark text-cream-text focus:ring-terracotta focus:border-terracotta light:bg-white light:border-gray-300 light:text-light-text">
+            </div>
+
+            {{-- Role --}}
+            <div>
+                <label for="role" class="block text-sm font-medium text-cream-text light:text-light-text mb-1">Role *</label>
                 <select id="role" name="role" required
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-amber-500 focus:border-amber-500 @error('role') border-red-500 @enderror">
-                    <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                    <option value="editor" {{ old('role') == 'editor' ? 'selected' : '' }}>Editor Konten</option>
-                    <option value="penulis" {{ old('role') == 'penulis' ? 'selected' : '' }}>Penulis</option>
+                        class="w-full px-4 py-2 border border-sienna/70 rounded-lg bg-bg-dark text-cream-text focus:ring-terracotta focus:border-terracotta light:bg-white light:border-gray-300 light:text-light-text">
+                    <option value="writer">Writer</option>
+                    <option value="editor">Editor</option>
+                    <option value="admin">Admin</option>
                 </select>
-                @error('role')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                @error('role')<p class="mt-2 text-sm text-terracotta">{{ $message }}</p>@enderror
             </div>
 
-            <div class="flex justify-end space-x-3">
-                <a href="{{ route('admin.users.index') }}" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">Batal</a>
-                <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition duration-150 shadow-md">
-                    <i class="fas fa-save mr-2"></i> Simpan Pengguna
+            <div class="flex justify-between items-center pt-4">
+                <a href="{{ route('admin.users.index') }}" class="text-terracotta hover:text-sienna transition">
+                    &leftarrow; Kembali ke Daftar
+                </a>
+
+                <button type="submit"
+                        class="px-6 py-2 bg-sawit-green text-bg-dark rounded-lg font-bold hover:bg-sawit-green/80 transition shadow-lg shadow-sawit-green/40">
+                    <i class="fas fa-user-plus mr-2"></i> Daftarkan Pengguna
                 </button>
             </div>
         </form>
+
     </div>
+</div>
 @endsection

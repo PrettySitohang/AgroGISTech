@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Route untuk halaman publik (Pastikan ini di atas route Auth)
 Route::controller(ArticleController::class)->group(function () {
-    Route::get('/', 'index')->name('public.index'); // Ini adalah route untuk http://localhost/
+    Route::get('/', 'index')->name('public.index');
     Route::get('/article/{article:slug}', 'show')->name('public.show');
     Route::get('/writer/{user}', 'showWriterProfile')->name('writer.profile');
 });
@@ -32,7 +32,6 @@ Route::controller(GoogleController::class)->prefix('auth/google')->group(functio
     Route::get('/callback', 'handleGoogleCallback')->name('google.callback');
 });
 
-// Route Dashboard, dst. (Tidak perlu diubah)
 
 Route::middleware('auth')->get('/dashboard', function() {
     $user = Auth::user();
@@ -49,7 +48,6 @@ Route::middleware(['auth','role:super_admin'])
     ->name('admin.')
     ->controller(AdminController::class)
     ->group(function(){
-        // ... kode admin lainnya ...
         Route::get('/', 'dashboard')->name('dashboard');
 
         Route::prefix('users')->name('users.')->group(function () {
@@ -91,7 +89,6 @@ Route::middleware(['auth','role:editor'])
     ->name('editor.')
     ->controller(EditorController::class)
     ->group(function(){
-        // ... kode editor lainnya ...
         Route::get('/', 'dashboard')->name('dashboard');
 
         Route::prefix('reviews')->name('reviews.')->group(function () {

@@ -1,22 +1,50 @@
-{{-- resources/views/layouts/partials/header.blade.php --}}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{{ route('public.index') }}">AgroGISTech</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="#nav" aria-expanded="false">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="nav">
-      <ul class="navbar-nav ms-auto">
-        @auth
-          <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a></li>
-          <li class="nav-item">
-            <form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-link nav-link">Logout</button></form>
-          </li>
-        @else
-          <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Login</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('register') }}">Daftar</a></li>
-        @endauth
-      </ul>
+<header class="fixed top-0 left-0 right-0 z-50 bg-bg-dark/95 backdrop-blur-sm shadow-xl shadow-bg-dark/50 border-b border-sienna/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-20">
+
+            {{-- Logo / Nama Platform --}}
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-leaf text-terracotta text-2xl"></i>
+                <a href="{{ url('/') }}" class="text-2xl font-extrabold text-cream-text tracking-wider">
+                    Agro<span class="text-terracotta">GISTech</span>
+                </a>
+            </div>
+
+            {{-- Navigasi Utama (Di tengah) --}}
+            <nav class="hidden md:flex space-x-8">
+                <a href="{{ url('/teknologi') }}"
+                   class="text-cream-text/80 font-semibold hover:text-terracotta transition duration-300">
+                    Teknologi
+                </a>
+                <a href="{{ url('/riset') }}"
+                   class="text-cream-text/80 font-semibold hover:text-terracotta transition duration-300">
+                    Riset & Data
+                </a>
+                <a href="{{ url('/berita') }}"
+                   class="text-cream-text/80 font-semibold hover:text-terracotta transition duration-300">
+                    Berita
+                </a>
+                <a href="{{ url('/tentang') }}"
+                   class="text-cream-text/80 font-semibold hover:text-terracotta transition duration-300">
+                    Tentang Kami
+                </a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <a href="{{ route('login') }}"
+                   class="hidden lg:inline-flex text-cream-text/80 font-semibold hover:text-terracotta transition duration-300">
+                    Login
+                </a>
+
+                <a href="{{ route('register') }}"
+                   class="px-5 py-2.5 text-bg-dark font-bold rounded-xl bg-terracotta hover:bg-sienna hover:text-cream-text transition duration-300 shadow-lg shadow-terracotta/40">
+                    Gabung Komunitas <i class="fas fa-arrow-up-right-from-square ml-1 text-sm"></i>
+                </a>
+            </div>
+
+            <button class="md:hidden text-cream-text hover:text-terracotta focus:outline-none">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
     </div>
-  </div>
-</nav>
+</header>
