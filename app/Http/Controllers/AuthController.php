@@ -21,47 +21,54 @@ class AuthController extends Controller
 
     // Mengganti nama method 'register' menjadi 'storeUser'
     public function storeUser(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:8',
-        ]);
+        {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|confirmed|min:8',
+            ]);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => 'penulis'
-        ]);
-
-        // Pastikan LogService::record ada
-        if (class_exists(LogService::class) && method_exists(LogService::class, 'record')) {
-            LogService::record('user.register', 'user', $user->id, ['email' => $user->email]);
-        }
-
-        Auth::login($user);
-        return redirect()->route('dashboard')->with('success', 'Akun dibuat dan login.');
-    }
-
-    // Mengganti nama method 'login' menjadi 'authenticate'
-    public function authenticate(Request $request)
-    {
-        $creds = $request->validate(['email'=>'required|email','password'=>'required']);
-
-        if (Auth::attempt($creds, $request->filled('remember'))) {
-            $request->session()->regenerate();
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'role' => 'penulis'
+            ]);
 
             // Pastikan LogService::record ada
             if (class_exists(LogService::class) && method_exists(LogService::class, 'record')) {
-                LogService::record('user.login', 'user', Auth::id());
+                LogService::record('user.register', 'user', $user->id, ['email' => $user->email]);
             }
 
-            return redirect()->intended(route('dashboard'));
+            Auth::login($user);
+            return redirect()->route('dashboard')->with('success', 'Akun dibuat dan login.');
         }
 
-        return back()->withErrors(['email'=>'Kredensial tidak cocok'])->withInput();
-    }
+        // Mengganti nama method 'login' menjadi 'authenticate'
+        public function authenticate(Request $request)
+            {
+                $creds = $request->validate([
+                    'email' => 'required|email',
+                    'password' => 'required'
+                ]);
+                if (Auth::attempt($creds, $request->filled('remember'))) {
+                    $request->session()->regenerate();
+
+                    $user = Auth::user();
+                    if (class_exists(LogService::class) && method_exists(LogService::class, 'record')) {
+                        LogService::record('user.login', 'user', $user->id);
+                    }
+                    if ($user->role === 'super_admin') {
+                        return redirect()->intended(route('admin.dashboard'));
+                    } else {
+                        return redirect()->intended(route('dashboard'));
+                    }
+                }
+                return back()
+                    ->withErrors(['email' => 'Kredensial tidak cocok'])
+                    ->withInput();
+            }
+
 
     public function logout(Request $request)
     {

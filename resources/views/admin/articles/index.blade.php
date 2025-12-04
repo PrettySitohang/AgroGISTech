@@ -4,20 +4,22 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <h2 class="text-3xl font-extrabold text-cream-text light:text-light-text">Manajemen Artikel</h2>
-        <a href="{{ route('admin.articles.create') }}"
-           class="px-4 py-2 bg-terracotta text-bg-dark rounded-lg font-bold hover:bg-sienna/80 transition shadow-md shadow-terracotta/40">
-            <i class="fas fa-pen-nib mr-2"></i> Buat Artikel Baru
-        </a>
     </div>
 
     <p class="text-gray-400 light:text-gray-600">Kelola semua konten, dari draf hingga artikel yang diarsipkan.</p>
 
-    {{-- Filter Status --}}
     <div class="flex space-x-4">
-        <button class="px-4 py-2 text-cream-text bg-sienna/50 rounded-lg font-semibold light:bg-gray-200 light:text-light-text">Semua (120)</button>
-        <button class="px-4 py-2 text-cream-text bg-sawit-green/40 rounded-lg font-semibold light:bg-sawit-green/20 light:text-sawit-green">Diterbitkan (90)</button>
-        <button class="px-4 py-2 text-cream-text bg-terracotta/40 rounded-lg font-semibold light:bg-terracotta/20 light:text-terracotta">Draf (25)</button>
-        <button class="px-4 py-2 text-cream-text bg-gray-500/40 rounded-lg font-semibold light:bg-gray-200 light:text-gray-600">Diarsipkan (5)</button>
+        {{-- Total Artikel --}}
+        <button class="px-4 py-2 text-cream-text bg-sienna/50 rounded-lg font-semibold light:bg-gray-200 light:text-light-text">Semua ({{ $totalArticles }})</button>
+
+        {{-- Diterbitkan --}}
+        <button class="px-4 py-2 text-cream-text bg-sawit-green/40 rounded-lg font-semibold light:bg-sawit-green/20 light:text-sawit-green">Diterbitkan ({{ $publishedCount }})</button>
+
+        {{-- Draf --}}
+        <button class="px-4 py-2 text-cream-text bg-terracotta/40 rounded-lg font-semibold light:bg-terracotta/20 light:text-terracotta">Draf ({{ $draftCount }})</button>
+
+        {{-- Review --}}
+        <button class="px-4 py-2 text-cream-text bg-gray-500/40 rounded-lg font-semibold light:bg-gray-200 light:text-gray-600">Sedang Direview ({{ $reviewCount }})</button>
     </div>
 
     {{-- Tabel Daftar Artikel --}}
@@ -29,7 +31,7 @@
                 <table class="min-w-full divide-y divide-sienna/30 light:divide-gray-200">
                     <thead class="bg-sienna/20 light:bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-cream-text/80 light:text-gray-600 uppercase tracking-wider">Judul</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-cream-text/80 light:text-gray-600 uppercase tracking-wider">Judul & Tanggal</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-cream-text/80 light:text-gray-600 uppercase tracking-wider">Penulis</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-cream-text/80 light:text-gray-600 uppercase tracking-wider">Kategori</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-cream-text/80 light:text-gray-600 uppercase tracking-wider">Status</th>
@@ -37,41 +39,72 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-sienna/30 light:divide-gray-200">
-                        {{-- Contoh Artikel --}}
-                        @php
-                            $articles = [
-                                ['id' => 1, 'title' => 'IoT Monitoring Lahan Sawit', 'author' => 'Suci A.', 'category' => 'IoT', 'status' => 'published'],
-                                ['id' => 2, 'title' => 'Riset Genomik Bibit Unggul', 'author' => 'Kurnia S.', 'category' => 'Biotek', 'status' => 'draft'],
-                            ];
-                        @endphp
-                        @foreach ($articles as $article)
+                        @forelse ($articles as $article)
                             <tr class="hover:bg-sienna/10 light:hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-cream-text light:text-light-text">{{ Str::limit($article['title'], 40) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 light:text-gray-500">{{ $article['author'] }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 light:text-gray-500">{{ $article['category'] }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                 @if($article['status'] == 'published') bg-sawit-green/40 text-cream-text
-                                                 @else bg-terracotta/40 text-cream-text @endif">
-                                        {{ ucfirst($article['status']) }}
+
+                                {{-- Kolom Judul & Tanggal --}}
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-cream-text light:text-light-text">{{ Str::limit($article->title, 50) }}</div>
+                                    <div class="text-xs text-gray-500 light:text-gray-400 mt-1">
+                                        Dibuat: {{ $article->created_at->format('d M Y') }}
+                                    </div>
+                                </td>
+
+                                {{-- Kolom Penulis --}}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 light:text-gray-500">
+                                    {{-- Menggunakan relasi 'author' --}}
+                                    <span class="font-semibold text-cream-text light:text-light-text">{{ $article->author->name ?? 'N/A' }}</span>
+                                </td>
+
+                                {{-- Kolom Kategori --}}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 light:text-gray-500">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-terracotta/20 text-terracotta light:bg-terracotta/10">
+                                         {{ $article->category->name ?? 'Tidak Ada' }}
                                     </span>
                                 </td>
+
+                                {{-- Kolom Status --}}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                        @if($article->status == 'published')
+                                            bg-sawit-green/40 text-cream-text
+                                        @elseif($article->status == 'draft')
+                                            bg-terracotta/40 text-cream-text
+                                        @else
+                                            bg-gray-500/40 text-cream-text
+                                        @endif">
+                                        {{ ucfirst($article->status) }}
+                                    </span>
+                                </td>
+
+                                {{-- Kolom Aksi --}}
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    <a href="{{ route('admin.articles.edit', $article['id']) }}" class="text-terracotta hover:text-sienna transition light:text-terracotta light:hover:text-sienna">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('admin.articles.destroy', $article['id']) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus artikel ini?');">
+                                    {{-- Tautan Edit DIHILANGKAN untuk Admin --}}
+
+                                    {{-- Tautan Hapus (Force Delete) --}}
+                                    <form action="{{ route('admin.articles.delete.force', $article->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini permanen (Force Delete).');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-500 hover:text-red-700 transition">
-                                            <i class="fas fa-trash-alt"></i>
+                                        <button type="submit" class="text-red-500 hover:text-red-700 transition" title="Hapus Permanen">
+                                            <i class="fas fa-trash-alt"></i> Hapus
                                         </button>
                                     </form>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr class="hover:bg-sienna/10 light:hover:bg-gray-50">
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500 light:text-gray-400">
+                                    Belum ada artikel yang tersedia.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Paginasi --}}
+            <div class="mt-6">
+                {{ $articles->links() }}
             </div>
         </div>
     </div>

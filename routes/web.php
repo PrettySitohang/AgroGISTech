@@ -65,18 +65,26 @@ Route::middleware(['auth','role:super_admin'])
         });
 
         Route::prefix('masters/categories')->name('categories.')->group(function () {
-            Route::get('/', 'categoryIndex')->name('index');
+
+        Route::get('/', 'categoryIndex')->name('index');
+            Route::get('/create', 'categoryCreate')->name('create');
             Route::post('/', 'categoryStore')->name('store');
+            Route::get('/{category}', 'categoryShow')->name('show');
+            Route::get('/{category}/edit', 'categoryEdit')->name('edit');
             Route::put('/{category}', 'categoryUpdate')->name('update');
             Route::delete('/{category}', 'categoryDelete')->name('delete');
         });
 
+
         Route::prefix('masters/tags')->name('tags.')->group(function () {
             Route::get('/', 'tagIndex')->name('index');
+            Route::get('/create', 'tagCreate')->name('create');
             Route::post('/', 'tagStore')->name('store');
+            Route::get('/{tag}/edit', 'tagEdit')->name('edit');
             Route::put('/{tag}', 'tagUpdate')->name('update');
             Route::delete('/{tag}', 'tagDelete')->name('delete');
         });
+
 
         Route::prefix('logs')->name('logs.')->group(function () {
             Route::get('/', 'logs')->name('index');

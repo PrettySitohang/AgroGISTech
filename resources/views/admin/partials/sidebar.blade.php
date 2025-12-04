@@ -1,6 +1,6 @@
 {{-- Sidebar untuk Panel Administrasi AgroGISTech --}}
 
-<aside class="w-64 flex-shrink-0 bg-terracotta/95 shadow-2xl shadow-terracotta/30 light:bg-sienna/95 transition-colors duration-500">
+<aside class="w-64 shrink-0 bg-terracotta/45 shadow-2xl shadow-terracotta/30 light:bg-sienna/95 transition-colors duration-500">
     <div class="h-full flex flex-col">
 
         {{-- Logo & Judul --}}
@@ -13,8 +13,6 @@
 
         {{-- Navigasi Menu --}}
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto text-cream-text font-semibold">
-
-            {{-- Fungsi navigasi aktif menggunakan variabel $currentRouteName (Contoh: 'admin.dashboard') --}}
             @php $currentRouteName = Route::currentRouteName() ?? 'admin.dashboard'; @endphp
 
             {{-- 1. Dashboard --}}

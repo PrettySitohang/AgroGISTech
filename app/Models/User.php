@@ -10,7 +10,7 @@ use App\Models\Article;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
-
+    protected $table = 'users';
     protected $fillable = [
         'name', 'email', 'password', 'role', 'google_id'
     ];

@@ -4,22 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Str;
 
 class Category extends Model
 {
     use HasFactory;
 
     protected $primaryKey = 'category_id';
+    protected $fillable = ['name', 'slug'];
 
-    protected $fillable = [
-        'name',
-        'slug',
-        'description',
-    ];
-
-    public function articles(): BelongsToMany
+    public function articles()
     {
-        return $this->belongsToMany(Article::class, 'article_category', 'category_id', 'article_id');
+        return $this->hasMany(Article::class, 'category_id');
+    }
+    public function setNameAttribute(string $value): void
+    {
+        $this->attributes['name'] = $value;
+        $this->attributes['slug'] = Str::slug($value);
     }
 }
