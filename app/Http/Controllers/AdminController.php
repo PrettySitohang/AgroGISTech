@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use App\Models\Setting;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -223,5 +225,39 @@ public function categoryUpdate(Request $request, Category $category)
     {
         $log->delete();
         return back()->with('success', 'Log dihapus.');
+    }
+
+    // Site settings: logo and site name
+    public function settingsIndex()
+    {
+        $siteName = Setting::get('site_name', config('app.name', 'AgroGISTech'));
+        $logoPath = Setting::get('logo');
+
+        return view('admin.settings.index', compact('siteName', 'logoPath'));
+    }
+
+    public function settingsUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'site_name' => 'required|string|max:255',
+            'logo' => 'nullable|image|max:2048'
+        ]);
+
+        Setting::set('site_name', $validated['site_name']);
+
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            $path = $file->store('settings', 'public');
+
+            // Remove previous logo if exists
+            $old = Setting::get('logo');
+            if ($old && Storage::disk('public')->exists($old)) {
+                Storage::disk('public')->delete($old);
+            }
+
+            Setting::set('logo', $path);
+        }
+
+        return redirect()->route('admin.settings.index')->with('success', 'Pengaturan situs berhasil disimpan.');
     }
 }

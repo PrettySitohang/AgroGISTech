@@ -2,11 +2,17 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-20">
 
-            {{-- Logo / Nama Platform --}}
+            {{-- Logo / Nama Platform (dari settings bila ada) --}}
             <div class="flex items-center space-x-2">
-                <i class="fas fa-leaf text-terracotta text-2xl"></i>
+                @php $siteName = \App\Models\Setting::get('site_name', config('app.name', 'AgroGISTech')); $logo = \App\Models\Setting::get('logo'); @endphp
+                @if($logo)
+                    <img src="{{ asset('storage/' . $logo) }}" alt="Logo" class="h-8 w-auto">
+                @else
+                    <i class="fas fa-leaf text-terracotta text-2xl"></i>
+                @endif
+
                 <a href="{{ url('/') }}" class="text-2xl font-extrabold text-cream-text tracking-wider">
-                    Agro<span class="text-terracotta">GISTech</span>
+                    {!! e($siteName) !!}
                 </a>
             </div>
 

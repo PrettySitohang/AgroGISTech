@@ -29,9 +29,9 @@ class ArticleSeeder extends Seeder
             'title'       => 'Inovasi Irigasi Presisi untuk Perkebunan',
             'slug'        => 'inovasi-irigasi-presisi-untuk-perkebunan',
             'content'     => 'Konten sample tentang irigasi presisi...',
-            'status'      => 'review',
+            'status'      => 'published',
             'author_id'   => $author?->id,
-            'cover_image' => 'articles/agrogistech-dummy.jpg',
+            'cover_image' => 'app/public/articles/agrogistech-dummy.jpg',
         ]);
 
         Article::create([

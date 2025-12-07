@@ -6,6 +6,7 @@ use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\EditorController;
 use App\Http\Controllers\PenulisController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\LogController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,12 @@ Route::controller(ArticleController::class)->group(function () {
     Route::get('/article/{article:slug}', 'show')->name('public.show');
     Route::get('/writer/{user}', 'showWriterProfile')->name('writer.profile');
 });
+
+// Static / section pages
+Route::get('/teknologi', [PageController::class, 'teknologi'])->name('pages.teknologi');
+Route::get('/riset', [PageController::class, 'riset'])->name('pages.riset');
+Route::get('/berita', [PageController::class, 'berita'])->name('pages.berita');
+Route::get('/tentang', [PageController::class, 'tentang'])->name('pages.tentang');
 
 // Route untuk otentikasi
 Route::controller(AuthController::class)->group(function () {
@@ -64,6 +71,12 @@ Route::middleware(['auth','role:super_admin'])
             Route::delete('/{article}', 'articleDelete')->name('delete.force');
         });
 
+        // Site settings (logo, site name)
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('/', 'settingsIndex')->name('index');
+            Route::post('/', 'settingsUpdate')->name('update');
+        });
+
         Route::prefix('masters/categories')->name('categories.')->group(function () {
 
         Route::get('/', 'categoryIndex')->name('index');
@@ -105,28 +118,38 @@ Route::middleware(['auth','role:editor'])
         });
 
         Route::prefix('articles')->name('articles.')->group(function () {
+            Route::delete('/{article}', 'articleDestroy')->name('destroy');
+            Route::get('/', 'articleIndex')->name('index');
             Route::get('/{article}/edit', 'articleEdit')->name('edit');
             Route::put('/{article}', 'articleUpdate')->name('update');
+            Route::put('/{article}/publish', 'articlePublish')->name('publish');
+
+
         });
 
         Route::prefix('masters/categories')->name('categories.')->group(function () {
             Route::get('/', 'categoryIndex')->name('index');
             Route::post('/', 'categoryStore')->name('store');
+            Route::get('/{category}/edit', 'categoryEdit')->name('edit');
             Route::put('/{category}', 'categoryUpdate')->name('update');
-            Route::delete('/{category}', 'categoryDelete')->name('delete');
+            Route::delete('/{category}', 'categoryDestroy')->name('destroy');
+
+
         });
 
         Route::prefix('masters/tags')->name('tags.')->group(function () {
             Route::get('/', 'tagIndex')->name('index');
             Route::post('/', 'tagStore')->name('store');
+            Route::get('/{tag}/edit', 'tagEdit')->name('edit');
             Route::put('/{tag}', 'tagUpdate')->name('update');
-            Route::delete('/{tag}', 'tagDelete')->name('delete');
+            Route::delete('/{tag}', 'tagDestroy')->name('destroy');
         });
 
         Route::get('/user/{user}', 'readProfile')->name('user.profile');
     });
 
-Route::middleware(['auth','role:penulis'])
+
+    Route::middleware(['auth','role:penulis'])
     ->prefix('penulis')
     ->name('penulis.')
     ->controller(PenulisController::class)

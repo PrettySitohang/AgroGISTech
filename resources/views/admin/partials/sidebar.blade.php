@@ -78,6 +78,18 @@
                 <span class="ml-3">Laporan & Log</span>
             </a>
 
+            {{-- 6. Pengaturan Situs (logo & nama) --}}
+            <a href="{{ route('admin.settings.index') }}"
+               class="flex items-center p-3 rounded-xl transition duration-200
+                      @if(Str::startsWith($currentRouteName, 'admin.settings'))
+                         bg-cream-text text-terracotta shadow-md
+                      @else
+                         hover:bg-terracotta/60 hover:text-bg-dark
+                      @endif">
+                <i class="fas fa-cog w-6"></i>
+                <span class="ml-3">Pengaturan Situs</span>
+            </a>
+
         </nav>
 
         {{-- Tombol Logout --}}
