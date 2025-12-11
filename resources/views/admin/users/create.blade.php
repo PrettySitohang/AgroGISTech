@@ -47,9 +47,10 @@
                 <label for="role" class="block text-sm font-medium text-cream-text light:text-light-text mb-1">Role *</label>
                 <select id="role" name="role" required
                         class="w-full px-4 py-2 border border-sienna/70 rounded-lg bg-bg-dark text-cream-text focus:ring-terracotta focus:border-terracotta light:bg-white light:border-gray-300 light:text-light-text">
-                    <option value="writer">Writer</option>
+                    <option value="">-- Pilih Role --</option>
+                    <option value="penulis">Penulis</option>
                     <option value="editor">Editor</option>
-                    <option value="admin">Admin</option>
+                    <option value="super_admin">Admin</option>
                 </select>
                 @error('role')<p class="mt-2 text-sm text-terracotta">{{ $message }}</p>@enderror
             </div>

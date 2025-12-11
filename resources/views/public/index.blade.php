@@ -108,7 +108,7 @@
 
                 {{-- Gambar Cover Artikel dengan Hover Zoom dan Rotasi --}}
                 <div class="relative overflow-hidden h-56">
-                    <img src="{{ $article->cover_image }}"
+                    <img src="{{ asset($article->cover_image ?? 'images/placeholder.jpg') }}"
                         onerror="this.src='https://placehold.co/600x400/8B3A2C/F5F5DC?text=Tech+Sawit+Image';"
                         alt="{{ $article->title }}"
                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1">
@@ -119,7 +119,7 @@
                 <div class="p-6">
                     {{-- Kategori (Tag Modern) --}}
                     <span class="inline-block px-3 py-1 text-xs font-extrabold uppercase tracking-widest bg-sienna/20 text-terracotta rounded-full">
-                        {{ $article->category ?? 'Umum' }}
+                        {{ $article->category->name ?? 'Umum' }}
                     </span>
 
                     {{-- Judul Artikel --}}

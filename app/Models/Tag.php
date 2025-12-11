@@ -9,11 +9,11 @@ use Illuminate\Support\Str;
 class Tag extends Model
 {
     protected $table = 'tags';
-    protected $primaryKey = 'tag_id';
 
     protected $fillable = [
         'name',
         'slug',
+        'created_by',
     ];
 
     public function setNameAttribute(string $value): void
@@ -25,5 +25,10 @@ class Tag extends Model
     public function articles(): BelongsToMany
     {
         return $this->belongsToMany(Article::class, 'article_tag', 'tag_id', 'article_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

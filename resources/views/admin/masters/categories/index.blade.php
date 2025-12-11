@@ -76,15 +76,15 @@
 
                     <tbody class="divide-y divide-sienna/30 light:divide-gray-200">
                         @foreach ($categories as $category)
-                            <tr id="category-row-{{ $category->category_id }}" class="hover:bg-sienna/10 light:hover:bg-gray-50 transition-colors">
+                            <tr id="category-row-{{ $category->id }}" class="hover:bg-sienna/10 light:hover:bg-gray-50 transition-colors">
 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-cream-text light:text-light-text">
-                                    {{ $category->category_id }}
+                                    {{ $category->id }}
                                 </td>
 
                                 <td class="px-6 py-4">
                                     <input type="text"
-                                           data-category-id="{{ $category->category_id }}"
+                                           data-category-id="{{ $category->id }}"
                                            data-original-name="{{ $category->name }}"
                                            value="{{ $category->name }}"
                                            class="editable-category-name bg-transparent border border-transparent focus:border-terracotta focus:ring-terracotta light:text-light-text text-cream-text w-full p-1 -m-1 rounded-md transition duration-150"
@@ -97,12 +97,12 @@
 
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                     <button type="button"
-                                            onclick="focusCategoryInput({{ $category->category_id }})"
+                                            onclick="focusCategoryInput({{ $category->id }})"
                                             class="text-terracotta hover:text-sienna transition cursor-pointer bg-transparent border-none p-0 inline-flex items-center">
                                          <i class="fas fa-edit mr-1"></i> Edit
                                     </button>
 
-                                    <form action="{{ route('admin.categories.delete', $category->category_id) }}"
+                                    <form action="{{ route('admin.categories.delete', $category->id) }}"
                                           method="POST"
                                           class="inline-block"
                                           onsubmit="return confirm('Hapus kategori {{ $category->name }}?');">
@@ -158,17 +158,19 @@
         const url = `{{ url('admin/masters/categories') }}/${categoryId}`;
         const row = document.getElementById(`category-row-${categoryId}`);
 
+        // Use FormData to properly send the request with CSRF token in body
+        const formData = new FormData();
+        formData.append('name', newName);
+        formData.append('_method', 'PUT');
+        formData.append('_token', csrfToken);
+
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                name: newName,
-                _method: 'PUT'
-            })
+            body: formData
         })
         .then(response => {
             if (!response.ok) {

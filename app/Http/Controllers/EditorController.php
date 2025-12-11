@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\LogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -45,8 +46,11 @@ public function categoryStore(Request $request)
 
     public function reviewIndex(Request $request)
     {
-        // Review queue: only show DRAFT articles waiting to be claimed
-        $query = Article::where('status', 'draft')->with('author');
+        // Review queue: show drafts that have been submitted for review and not yet claimed by any editor
+        $query = Article::where('status', 'draft')
+                ->where('submitted_for_review', true)
+                ->whereNull('editor_id')
+                ->with('author');
 
         if ($search = $request->get('search')) {
             $query->where('title', 'like', '%' . $search . '%');
@@ -67,6 +71,7 @@ public function claimArticle(Article $article)
 
         $article->editor_id = Auth::id();
         $article->status = 'review'; // Status berubah dari draft ke review
+        $article->submitted_for_review = false; // clear submitted flag
         $article->save();
 
         LogService::record('article.claimed', 'article', $article->id, ['editor' => Auth::user()->name]);
@@ -113,7 +118,6 @@ public function claimArticle(Article $article)
             'title' => 'required|max:255|unique:articles,title',
             'content' => 'required',
             'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'categories' => 'array',
             'tags' => 'array',
         ]);
 
@@ -125,8 +129,9 @@ public function claimArticle(Article $article)
             'status' => 'review',
         ]);
 
-        $article->categories()->sync($request->categories);
-        $article->tags()->sync($request->tags);
+        if ($request->filled('tags')) {
+            $article->tags()->sync($request->tags);
+        }
 
         LogService::record('article.created', 'article', $article->id, ['author' => Auth::user()->name]);
 
@@ -208,7 +213,7 @@ public function claimArticle(Article $article)
             'content' => 'required',
             'review_notes' => 'required',
             'status' => 'required|in:draft,review,published,archived',
-            'categories' => 'array',
+            'category_id' => 'nullable|exists:categories,id',
             'tags' => 'array',
         ]);
 
@@ -220,16 +225,20 @@ public function claimArticle(Article $article)
             'notes' => $request->review_notes,
         ]);
 
-        $article->update([
+        $updateData = [
             'title' => $request->title,
             'content' => $request->content,
             'status' => $request->status,
+            'category_id' => $request->category_id,
             'editor_id' => Auth::id(),
             'published_at' => ($request->status === 'published' ? now() : $article->published_at),
-        ]);
+        ];
 
-        $article->categories()->sync($request->categories);
-        $article->tags()->sync($request->tags);
+        $article->update($updateData);
+
+        if ($request->filled('tags')) {
+            $article->tags()->sync($request->tags);
+        }
 
         return redirect()->route('editor.reviews.index')
             ->with('success', 'Artikel diperbarui dan berstatus: ' . $article->status);
@@ -257,7 +266,8 @@ public function claimArticle(Article $article)
 
     public function tagIndex()
     {
-        $tags = Tag::latest()->paginate(10);
+        // Only show tags created by the current editor
+        $tags = Tag::where('created_by', Auth::id())->latest()->paginate(10);
         return view('editor.masters.tags.index', compact('tags'));
     }
 
@@ -280,6 +290,7 @@ public function claimArticle(Article $article)
         Tag::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
+            'created_by' => Auth::id(), // Associate tag with current editor
         ]);
 
         return redirect()->route('editor.tags.index')
@@ -288,6 +299,12 @@ public function claimArticle(Article $article)
 
     public function tagUpdate(Request $request, Tag $tag) // <-- TAMBAHKAN
     {
+        // Verify that the tag belongs to the current editor
+        if ($tag->created_by !== Auth::id()) {
+            return redirect()->route('editor.tags.index')
+                            ->with('error', 'Anda tidak memiliki izin untuk mengubah tag ini.');
+        }
+
         $request->validate([
             'name' => [
                 'required',
@@ -323,5 +340,33 @@ public function claimArticle(Article $article)
 
         return redirect()->route('editor.tags.index')
                          ->with('success', "Tag '{$tagName}' berhasil dihapus.");
+    }
+
+    public function profileEdit()
+    {
+        $user = Auth::user();
+        return view('editor.profile.edit', ['user' => $user]);
+    }
+
+    public function profileUpdate(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        if ($request->filled('password')) {
+            $user->update(['password' => \Illuminate\Support\Facades\Hash::make($validated['password'])]);
+        }
+
+        return redirect()->route('editor.profile.edit')->with('success', 'Profil berhasil diperbarui.');
     }
 }

@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tags', function (Blueprint $table) {
-            $table->bigIncrements('tag_id');
+            $table->id();
             $table->string('name', 255);
             $table->string('slug', 255)->unique();
             $table->timestamps();

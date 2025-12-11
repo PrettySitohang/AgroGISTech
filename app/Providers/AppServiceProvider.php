@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use App\Models\Setting;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Share site settings to all views
+        View::composer('*', function ($view) {
+            $siteName = Setting::get('site_name', config('app.name', 'AgroGISTech'));
+            $logoPath = Setting::get('logo');
+            
+            $view->with([
+                'siteName' => $siteName,
+                'logoPath' => $logoPath,
+            ]);
+        });
     }
 }

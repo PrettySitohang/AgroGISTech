@@ -72,24 +72,22 @@
 
                     {{-- START: INPUT CATEGORY DAN TAG (Melengkapi TODO) --}}
 
-                    {{-- Dropdown Kategori (Multi-select) --}}
+                    {{-- Dropdown Kategori (Single Select) --}}
                     <div>
-                        <label for="categories" class="block text-sm font-medium text-cream-text light:text-light-text">Kategori</label>
-                        <select id="categories" name="categories[]" multiple
-                                class="mt-1 block w-full px-4 py-2 border border-sienna/70 rounded-lg shadow-sm bg-bg-dark text-cream-text focus:ring-terracotta focus:border-terracotta light:bg-white light:border-gray-300 light:text-light-text"
-                                style="min-height: 100px;">
-                            @php
-                                // Ambil ID kategori yang sudah terpilih di artikel ini
-                                $currentCategories = old('categories', $article->categories->pluck('id')->toArray());
-                            @endphp
+                        <label for="category_id" class="block text-sm font-medium text-cream-text light:text-light-text">Kategori</label>
+                        <select id="category_id" name="category_id"
+                                class="mt-1 block w-full px-4 py-2 border border-sienna/70 rounded-lg shadow-sm bg-bg-dark text-cream-text focus:ring-terracotta focus:border-terracotta light:bg-white light:border-gray-300 light:text-light-text">
+                            <option value="">-- Pilih Kategori --</option>
                             @foreach ($categories as $category)
                                 <option value="{{ $category->id }}"
-                                    {{ in_array($category->id, $currentCategories) ? 'selected' : '' }}>
+                                    {{ old('category_id', $article->category_id) == $category->id ? 'selected' : '' }}>
                                     {{ $category->name }}
                                 </option>
                             @endforeach
                         </select>
-                        <p class="text-xs text-gray-500 mt-1">Pilih satu atau lebih kategori. Tahan Ctrl/Cmd untuk memilih beberapa.</p>
+                        @error('category_id')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     {{-- Dropdown Tag (Multi-select) --}}
@@ -100,7 +98,7 @@
                                 style="min-height: 100px;">
                             @php
                                 // Ambil ID tag yang sudah terpilih di artikel ini
-                                $currentTags = old('tags', $article->tags->pluck('id')->toArray());
+                                $currentTags = old('tags', $article->tags ? $article->tags->pluck('id')->toArray() : []);
                             @endphp
                             @foreach ($tags as $tag)
                                 <option value="{{ $tag->id }}"
@@ -110,6 +108,9 @@
                             @endforeach
                         </select>
                         <p class="text-xs text-gray-500 mt-1">Pilih satu atau lebih tag. Tahan Ctrl/Cmd untuk memilih beberapa.</p>
+                        @error('tags')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     {{-- END: INPUT CATEGORY DAN TAG --}}
@@ -148,7 +149,7 @@
                 <div class="bg-sienna/30 light:bg-gray-100 shadow-lg rounded-xl p-6 border border-sienna/50 light:border-gray-200">
                     <h3 class="text-lg font-semibold text-cream-text light:text-light-text mb-3">Info Penulis</h3>
                     <p class="text-sm text-cream-text/80 light:text-gray-600">
-                        *Penulis:* <a href="{{ route('editor.read.profile', $article->author) }}" class="text-terracotta hover:underline">{{ $article->author->name ?? 'N/A' }}</a><br>
+                        *Penulis:* <a href="{{ route('editor.user.profile', $article->author) }}" class="text-terracotta hover:underline">{{ $article->author->name ?? 'N/A' }}</a><br>
                         *Email:* {{ $article->author->email ?? 'N/A' }}<br>
                         *Diajukan:* {{ $article->created_at->diffForHumans() }}
                     </p>

@@ -1,53 +1,180 @@
-# Alur Workflow AgroGISTech
+# 📋 WORKFLOW INTEGRASI ARTIKEL - Penulis → Editor → Admin
 
-## 📋 Workflow Artikel (Article Workflow)
+## 🔄 ALUR LENGKAP SISTEM
 
-### 1. **Penulis (Author) membuat artikel baru**
 ```
-GET  /penulis/create               → PenulisController::create()      [Form create]
-POST /penulis/store                → PenulisController::store()       [Submit → status='review']
+┌─────────────────────────────────────────────────────────────────┐
+│                     PENULIS FLOW                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Buat Artikel Baru
+│    URL: /penulis/articles/create
+│    Status: draft (tidak ada editor_id)
+│    Controller: PenulisController::articleCreate() → articleStore()
+│
+│ 2. Edit Artikel Draft
+│    URL: /penulis/articles/{id}/edit
+│    Hanya penulis pemilik yang bisa edit
+│    Status tetap: draft
+│
+│ 3. SUBMIT ke Editor
+│    URL: /penulis/articles/{id}/submit (POST)
+│    Status berubah: draft → review
+│    editor_id tetap NULL (belum diklaim)
+│    Controller: PenulisController::articleSubmit()
+│
+│ 4. Tunggu Editor Klaim
+│    Artikel masuk ke "Review Queue" editor
+│    Penulis melihat status: Review (pending review)
+│
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     EDITOR FLOW                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Review Queue
+│    URL: /editor/reviews
+│    Lihat SEMUA artikel dengan status=draft (unclaimed)
+│    Controller: EditorController::reviewIndex()
+│    Query: Article::where('status', 'draft')->with('author')
+│
+│ 2. KLAIM Artikel
+│    URL: /editor/reviews/{id}/claim (POST)
+│    Status: draft → review
+│    editor_id: NULL → editor yang klaim
+│    Controller: EditorController::claimArticle()
+│
+│ 3. Edit Artikel (List of Articles)
+│    URL: /editor/articles
+│    Hanya lihat artikel dengan status review & published
+│    Tombol Edit hanya untuk status=review & editor=auth user
+│    Controller: EditorController::articleIndex() & articleEdit()
+│
+│ 4. PUBLIKASIKAN Artikel
+│    URL: /editor/articles/{id}/publish (PUT)
+│    Status: review → published
+│    published_at: sekarang
+│    Controller: EditorController::articlePublish()
+│
+│ 5. Delete Artikel (Soft Delete)
+│    URL: /editor/articles/{id} (DELETE)
+│    Status tetap, tapi article di-soft delete
+│    Controller: EditorController::articleDestroy()
+│
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     ADMIN FLOW                                   │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Lihat Semua Artikel
+│    URL: /admin/articles
+│    Lihat SEMUA artikel (draft, review, published)
+│    Dengan filter status dan pencarian
+│    Controller: AdminController::articleIndex()
+│    Query: Article::with('author', 'editor', 'category', 'tags')
+│
+│ 2. Force Delete Artikel
+│    URL: /admin/articles/{id} (DELETE)
+│    Hapus permanen dari database
+│    Controller: AdminController::articleDelete()
+│    Catat di log: 'article.force_delete'
+│
+│ 3. Kategori & Tag Management
+│    URL: /admin/masters/categories & /admin/masters/tags
+│    Manage kategori dan tag untuk artikel
+│
+│ 4. Monitoring
+│    Dashboard: Lihat statistik artikel, user, logs
+│    URL: /admin
+│    Hitung: total, published, draft, review
+│
+└─────────────────────────────────────────────────────────────────┘
 ```
-- Penulis mengisi form dan submit
-- Artikel disimpan dengan **status='review'**
-- LogService mencatat: `article.submit_for_review`
-- Redirect ke `/penulis/articles` dengan pesan sukses
 
----
+## 📊 DATABASE STATE PER STATUS
 
-### 2. **Editor mereview artikel (status='review')**
+### Status: `draft`
 ```
-GET  /editor/review                → EditorController::reviewList()   [List review articles]
-POST /editor/publish/{article}     → EditorController::publish()      [Publish]
-POST /editor/sendback/{article}    → EditorController::sendBackToAuthor() [Tolak, kirim balik]
-```
-
-**Opsi A: Editor Publish**
-- Status berubah: `review` → `published`
-- Set `published_at = now()`
-- Set `editor_id = Auth::id()` (editor yang publish)
-- LogService mencatat: `article.publish`
-- Artikel muncul di halaman publik
-
-**Opsi B: Editor Kirim Balik**
-- Status berubah: `review` → `draft`
-- Set `editor_id = Auth::id()` (editor yang kirim balik)
-- LogService mencatat: `article.send_back` + note
-- Penulis bisa edit dan resubmit
-
----
-
-### 3. **Penulis menerima feedback dan mengedit ulang**
-```
-GET  /penulis/articles             → PenulisController::index()       [List artikel penulis]
-GET  /penulis/articles/{id}/edit   → PenulisController::edit()        [Form edit]
-PUT  /penulis/articles/{id}        → PenulisController::update()      [Submit update]
+- Dibuat oleh: penulis
+- editor_id: NULL
+- published_at: NULL
+- Bisa diedit oleh: penulis (pemilik)
+- Bisa dihapus oleh: penulis (pemilik)
+- Tempat lihat: Penulis (My Articles)
 ```
 
-**Saat update:**
-- Jika artikel status = `draft` (hasil kirim balik editor):
-  - Status otomatis berubah → `review`
-  - Message: "Artikel diperbarui dan dikirim untuk direview."
-  - Balik ke editor untuk review ulang
+### Status: `review`
+```
+- Dibuat oleh: penulis (submit)
+- editor_id: NULL atau <id_editor> (jika sudah diklaim)
+- published_at: NULL
+- Bisa diedit oleh: editor (yang mengklaim)
+- Bisa diklaim oleh: editor mana saja (jika belum ada editor_id)
+- Tempat lihat: Editor (Review Queue & List of Articles)
+```
+
+### Status: `published`
+```
+- Dibuat oleh: editor (publikasikan)
+- editor_id: <id_editor> (editor yang publikasikan)
+- published_at: timestamp (saat publikasi)
+- Tidak bisa diedit oleh: siapa saja (LOCKED)
+- Tempat lihat: Publik, Admin
+```
+
+## 🔑 KEY BUSINESS RULES
+
+### ✅ Penulis
+
+| Action | Status | Kondisi | Hasil |
+|--------|--------|---------|-------|
+| Create | - | - | Status = draft |
+| Edit | draft | Pemilik | Tetap draft |
+| Submit | draft | Pemilik | Status → review, editor_id = null |
+| View | draft, review, published | Pemilik | Lihat di "My Articles" |
+| Delete | draft | Pemilik | Hapus (soft delete) |
+
+### ✅ Editor
+
+| Action | Status | Kondisi | Hasil |
+|--------|--------|---------|-------|
+| View Queue | draft | - | Lihat unclaimed articles |
+| Claim | draft | Belum diklaim | Status → review, editor_id = auth |
+| Edit | review | Diklaim oleh auth | Edit konten |
+| Publish | review | Diklaim oleh auth | Status → published, published_at = now |
+| Delete | any | - | Soft delete |
+
+### ✅ Admin
+
+| Action | Kondisi | Hasil |
+|--------|---------|-------|
+| View All | - | Semua artikel semua status |
+| Filter | By Status | Draft, Review, Published |
+| Search | By Title | Cari judul artikel |
+| Force Delete | - | Hard delete dari DB |
+
+## 🛠️ CONTROLLER METHODS
+
+### PenulisController
+- `articleIndex()` - List artikel penulis (draft & submitted)
+- `articleCreate()` - Form buat artikel
+- `articleStore()` - Simpan artikel baru (status=draft)
+- `articleEdit()` - Form edit artikel
+- `articleUpdate()` - Update artikel (tetap draft)
+- `articleSubmit()` - Submit untuk review (draft → review)
+- `articleDelete()` - Hapus artikel penulis
+
+### EditorController
+- `reviewIndex()` - Antrian artikel draft unclaimed
+- `claimArticle()` - Klaim artikel (draft → review + editor_id)
+- `articleIndex()` - Daftar artikel review & published
+- `articleEdit()` - Form edit artikel review
+- `articleUpdate()` - Update artikel review
+- `articlePublish()` - Publikasi artikel (review → published)
+- `articleDestroy()` - Soft delete artikel
+
+### AdminController
+- `articleIndex()` - Lihat semua artikel dengan filter
+- `articleDelete()` - Force delete artikel
 - Jika artikel status ≠ `draft`:
   - Status tetap sama
   - Message: "Artikel diperbarui."

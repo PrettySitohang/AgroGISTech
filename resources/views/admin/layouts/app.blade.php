@@ -53,7 +53,7 @@
 </head>
 
 {{-- Menggunakan kelas body tema gelap default --}}
-<body class="bg-bg-dark text-cream-text antialiased transition-colors duration-500 light:bg-gray-100 light:text-light-text">
+<body class="bg-bg-dark text-cream-text antialiased transition-colors duration-500 light:bg-gray-50 light:text-light-text">
     <div class="flex min-h-screen">
 
         {{-- 1. SIDEBAR (Fixed) --}}
@@ -75,9 +75,22 @@
                     </button>
 
                     {{-- User Dropdown --}}
-                    <div class="text-cream-text light:text-light-text flex items-center space-x-2">
-                        <span class="font-medium hidden sm:block">Pretty (Admin)</span>
-                        <i class="fas fa-user-circle text-2xl text-terracotta"></i>
+                    <div class="relative group text-cream-text light:text-light-text flex items-center space-x-2 cursor-pointer">
+                        <span class="font-medium hidden sm:block">{{ Auth::user()->name ?? 'Admin' }}</span>
+                        <i class="fas fa-user-circle text-2xl text-terracotta group-hover:text-sienna transition"></i>
+
+                        {{-- Dropdown Menu --}}
+                        <div class="absolute right-0 top-full mt-2 w-48 bg-sienna/95 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-300 z-50">
+                            <a href="{{ route('admin.profile.edit') }}" class="block px-4 py-3 text-cream-text hover:bg-terracotta/50 rounded-t-lg transition">
+                                <i class="fas fa-user-edit mr-2"></i>Edit Profil
+                            </a>
+                            <form action="{{ route('logout') }}" method="POST" class="border-t border-terracotta/30">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-4 py-3 text-cream-text hover:bg-terracotta/50 rounded-b-lg transition">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -96,5 +109,7 @@
             </main>
         </div>
     </div>
+
+    @stack('scripts')
 </body>
 </html>

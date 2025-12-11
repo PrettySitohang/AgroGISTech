@@ -16,5 +16,6 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class ?? \Illuminate\Auth\Middleware\Authenticate::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'nocache' => \App\Http\Middleware\NoCacheMiddleware::class,
     ];
 }

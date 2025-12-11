@@ -55,15 +55,30 @@ class AuthController extends Controller
                     $request->session()->regenerate();
 
                     $user = Auth::user();
+                    \Log::info('User login successful', [
+                        'user_id' => $user->id,
+                        'user_name' => $user->name,
+                        'user_role' => $user->role
+                    ]);
+
                     if (class_exists(LogService::class) && method_exists(LogService::class, 'record')) {
                         LogService::record('user.login', 'user', $user->id);
                     }
-                    if ($user->role === 'super_admin') {
-                        return redirect()->intended(route('admin.dashboard'));
-                    } else {
-                        return redirect()->intended(route('dashboard'));
-                    }
+
+                    // Redirect berdasarkan role
+                    return match($user->role) {
+                        'super_admin' => redirect()->route('admin.dashboard')->with('success', 'Login berhasil! Selamat datang di Admin Panel.'),
+                        'editor' => redirect()->route('editor.dashboard')->with('success', 'Login berhasil! Selamat datang di Editor Panel.'),
+                        'penulis' => redirect()->route('penulis.dashboard')->with('success', 'Login berhasil! Selamat datang di Dashboard Penulis.'),
+                        default => redirect()->route('dashboard')->with('success', 'Login berhasil!')
+                    };
                 }
+
+                \Log::warning('Login attempt failed', [
+                    'email' => $request->email,
+                    'ip' => $request->ip()
+                ]);
+
                 return back()
                     ->withErrors(['email' => 'Kredensial tidak cocok'])
                     ->withInput();

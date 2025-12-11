@@ -54,9 +54,11 @@
     </div>
 
     {{-- Grafik Baru: Log Aktivitas per Role --}}
-    <div class="bg-bg-dark light:bg-white p-5 rounded-xl shadow-xl border border-sienna/50 light:border-gray-200">
-        <h2 class="font-semibold text-lg mb-4 text-cream-text light:text-light-text">Aktivitas Log Pengguna Berdasarkan Role</h2>
-        <canvas id="logActivityChart" height="100"></canvas>
+    <div class="bg-bg-dark light:bg-white p-6 rounded-xl shadow-xl border border-sienna/50 light:border-gray-200">
+        <h2 class="font-semibold text-lg mb-6 text-cream-text light:text-light-text">Aktivitas Log Pengguna Berdasarkan Role</h2>
+        <div class="flex justify-center" style="max-width: 500px; margin: 0 auto;">
+            <canvas id="logActivityChart"></canvas>
+        </div>
     </div>
 
     {{-- Aksi Cepat --}}
@@ -126,49 +128,40 @@ document.addEventListener('DOMContentLoaded', function () {
     ];
 
     const chartConfig = {
-        type: 'bar',
+        type: 'doughnut',
         data: {
             labels: ['Editor', 'Penulis'],
             datasets: [{
                 label: 'Jumlah Log Aktivitas',
-                // Menggunakan data log yang baru dari Controller
                 data: [{{ $editorLogCount }}, {{ $penulisLogCount }}],
                 backgroundColor: roleColors,
-                borderColor: roleColors.map(color => color + 'AA'),
-                borderWidth: 1.5,
-                borderRadius: 4,
+                borderColor: '#1C0E0B',
+                borderWidth: 3,
+                hoverOffset: 8,
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
             plugins: {
                 legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    // Pastikan tick hanya berupa bilangan bulat
-                    ticks: {
+                    position: 'bottom',
+                    labels: {
                         color: 'rgb(209, 213, 219)',
-                        stepSize: 1,
-                        callback: function(value) {
-                            if (value % 1 === 0) return value;
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)',
-                        borderColor: 'rgba(255, 255, 255, 0.2)'
+                        font: {
+                            size: 13,
+                            weight: '500'
+                        },
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
                     }
                 },
-                x: {
-                    ticks: {
-                        color: 'rgb(209, 213, 219)'
-                    },
-                    grid: {
-                        display: false
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed + ' aktivitas';
+                        }
                     }
                 }
             }
@@ -183,15 +176,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateChartColors(isDarkMode) {
         const chart = Chart.getChart('logActivityChart');
         if (chart) {
-            // Tentukan warna tick dan grid berdasarkan mode
             const tickColor = isDarkMode ? 'rgb(209, 213, 219)' : 'rgb(55, 65, 81)';
-            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-
-            // Terapkan perubahan
-            chart.options.scales.y.ticks.color = tickColor;
-            chart.options.scales.x.ticks.color = tickColor;
-            chart.options.scales.y.grid.color = gridColor;
-
+            chart.options.plugins.legend.labels.color = tickColor;
+            chart.options.plugins.legend.labels.borderColor = isDarkMode ? '#1C0E0B' : '#F5F5F5';
             chart.update();
         }
     }

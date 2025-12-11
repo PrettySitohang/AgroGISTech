@@ -14,6 +14,7 @@ class ArticleSeeder extends Seeder
         $author = User::where('role', 'penulis')->first();
         $editor = User::where('role', 'editor')->first();
 
+        // Article 1: Published (sudah selesai dan dipublikasi)
         Article::create([
             'title'        => 'Teknologi Pemupukan Modern pada Kelapa Sawit',
             'slug'         => 'teknologi-pemupukan-modern-pada-kelapa-sawit',
@@ -25,21 +26,36 @@ class ArticleSeeder extends Seeder
             'cover_image'  => 'articles/agrogistech-dummy.jpg',
         ]);
 
+        // Article 2: Draft (belum disubmit ke editor)
         Article::create([
             'title'       => 'Inovasi Irigasi Presisi untuk Perkebunan',
             'slug'        => 'inovasi-irigasi-presisi-untuk-perkebunan',
             'content'     => 'Konten sample tentang irigasi presisi...',
-            'status'      => 'published',
+            'status'      => 'draft',
             'author_id'   => $author?->id,
-            'cover_image' => 'app/public/articles/agrogistech-dummy.jpg',
+            'editor_id'   => null,
+            'cover_image' => 'articles/agrogistech-dummy.jpg',
         ]);
 
+        // Article 3: Review (dalam proses penyuntingan editor)
         Article::create([
             'title'       => 'Manajemen Hama Terpadu',
             'slug'        => 'manajemen-hama-terpadu',
             'content'     => 'Draft mengenai pest management...',
+            'status'      => 'review',
+            'author_id'   => $author?->id,
+            'editor_id'   => $editor?->id,
+            'cover_image' => 'articles/agrogistech-dummy.jpg',
+        ]);
+
+        // Article 4: Draft (contoh artikel draft lainnya)
+        Article::create([
+            'title'       => 'Sawit Modern - Teknik Terbaru',
+            'slug'        => 'sawit-modern-teknik-terbaru',
+            'content'     => 'Konten tentang teknik modern dalam pertanian sawit...',
             'status'      => 'draft',
             'author_id'   => $author?->id,
+            'editor_id'   => null,
             'cover_image' => 'articles/agrogistech-dummy.jpg',
         ]);
     }

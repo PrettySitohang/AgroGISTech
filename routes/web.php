@@ -68,6 +68,8 @@ Route::middleware(['auth','role:super_admin'])
 
         Route::prefix('articles')->name('articles.')->group(function () {
             Route::get('/', 'articleIndex')->name('index');
+            Route::get('/{article}/edit', 'articleEdit')->name('edit');
+            Route::put('/{article}', 'articleUpdate')->name('update');
             Route::delete('/{article}', 'articleDelete')->name('delete.force');
         });
 
@@ -102,6 +104,11 @@ Route::middleware(['auth','role:super_admin'])
         Route::prefix('logs')->name('logs.')->group(function () {
             Route::get('/', 'logs')->name('index');
             Route::delete('/{log}', [LogController::class,'deleteLog'])->name('delete');
+        });
+
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/edit', 'profileEdit')->name('edit');
+            Route::put('/', 'profileUpdate')->name('update');
         });
     });
 
@@ -146,6 +153,11 @@ Route::middleware(['auth','role:editor'])
         });
 
         Route::get('/user/{user}', 'readProfile')->name('user.profile');
+
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/edit', 'profileEdit')->name('edit');
+            Route::put('/', 'profileUpdate')->name('update');
+        });
     });
 
 

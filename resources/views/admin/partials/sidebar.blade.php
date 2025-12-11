@@ -5,10 +5,16 @@
 
         {{-- Logo & Judul --}}
         <div class="flex items-center justify-center h-20 bg-sienna/80 light:bg-terracotta/80 p-4 border-b border-terracotta/50 light:border-sienna/50">
-             <i class="fas fa-leaf text-cream-text text-3xl"></i>
-             <span class="text-2xl font-extrabold text-cream-text tracking-wider ml-2">
-                Agro<span class="text-bg-dark light:text-light-text">GISTech</span>
-             </span>
+            <div class="flex items-center space-x-2 w-full justify-center">
+                @if($logoPath)
+                    <img src="{{ asset('storage/' . $logoPath) }}" alt="Logo" class="h-12 w-auto">
+                @else
+                    <i class="fas fa-leaf text-cream-text text-2xl"></i>
+                @endif
+                <span class="text-lg font-extrabold text-cream-text tracking-wider text-center">
+                    {{ $siteName ?? 'AgroGISTech' }}
+                </span>
+            </div>
         </div>
 
         {{-- Navigasi Menu --}}
@@ -78,7 +84,7 @@
                 <span class="ml-3">Laporan & Log</span>
             </a>
 
-            {{-- 6. Pengaturan Situs (logo & nama) --}}
+            {{-- 6. Pengaturan Situs --}}
             <a href="{{ route('admin.settings.index') }}"
                class="flex items-center p-3 rounded-xl transition duration-200
                       @if(Str::startsWith($currentRouteName, 'admin.settings'))
@@ -87,21 +93,18 @@
                          hover:bg-terracotta/60 hover:text-bg-dark
                       @endif">
                 <i class="fas fa-cog w-6"></i>
-                <span class="ml-3">Pengaturan Situs</span>
+                <span class="ml-3">Pengaturan</span>
             </a>
-
         </nav>
 
-        {{-- Tombol Logout --}}
+        {{-- Logout Button (Bottom) --}}
         <div class="p-4 border-t border-terracotta/50 light:border-sienna/50">
-            <a href="{{ route('logout') }}"
-               onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-               class="w-full flex items-center justify-center p-3 rounded-xl bg-sienna hover:bg-bg-dark text-cream-text transition duration-200 shadow-lg shadow-sienna/40">
-                <i class="fas fa-sign-out-alt mr-2"></i>
-                Logout
-            </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            <form action="{{ route('logout') }}" method="POST">
                 @csrf
+                <button type="submit" class="w-full flex items-center p-3 rounded-xl text-cream-text font-semibold transition duration-200 hover:bg-terracotta/60 hover:text-bg-dark">
+                    <i class="fas fa-sign-out-alt w-6"></i>
+                    <span class="ml-3">Logout</span>
+                </button>
             </form>
         </div>
     </div>

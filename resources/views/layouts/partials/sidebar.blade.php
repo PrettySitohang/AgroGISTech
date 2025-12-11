@@ -3,9 +3,13 @@
         <div class="flex items-center justify-between h-20">
 
             <div class="flex items-center space-x-2">
-                <i class="fas fa-tree text-terracotta text-2xl"></i>
+                @if($logoPath)
+                    <img src="{{ asset('storage/' . $logoPath) }}" alt="Logo" class="h-10 w-auto">
+                @else
+                    <i class="fas fa-leaf text-terracotta text-2xl"></i>
+                @endif
                 <a href="{{ url('/') }}" class="text-2xl font-extrabold text-cream-text tracking-wider">
-                    SAWIT<span class="text-terracotta">TECH</span>
+                    {{ $siteName ?? 'AgroGISTech' }}
                 </a>
             </div>
 

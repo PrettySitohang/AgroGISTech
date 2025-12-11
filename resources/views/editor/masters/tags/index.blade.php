@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('editor.layouts.app')
 
 @section('content')
 <div class="space-y-6">
@@ -34,13 +34,15 @@
     {{-- TAB NAVIGATION (Tag Aktif) --}}
     <div class="flex border-b border-sienna/50 light:border-gray-300 mb-6">
         {{-- Tab Kategori (INACTIVE) --}}
-        <a href="{{ route('admin.categories.index') }}"
+        {{-- Diarahkan ke editor.categories.index --}}
+        <a href="{{ route('editor.categories.index') }}"
            class="px-6 py-2 text-gray-500 font-semibold hover:text-terracotta transition border-b-2 border-transparent hover:border-sienna/50">
             <i class="fas fa-folder-open mr-2"></i> Kategori
         </a>
 
         {{-- Tab Tag (ACTIVE) --}}
-        <a href="{{ route('admin.tags.index') }}"
+        {{-- Diarahkan ke editor.tags.index --}}
+        <a href="{{ route('editor.tags.index') }}"
            class="px-6 py-2 text-terracotta font-bold border-b-2 border-terracotta -mb-px bg-sienna/10 light:bg-gray-100 transition duration-300">
             <i class="fas fa-tag mr-2"></i> Tag
         </a>
@@ -52,7 +54,8 @@
     <div class="bg-bg-dark light:bg-white rounded-xl p-6 shadow-xl border border-sienna/50 light:border-gray-200 mb-6">
         <h3 class="text-xl font-semibold text-cream-text light:text-light-text mb-4">Tambah Tag Baru</h3>
 
-        <form action="{{ route('admin.tags.store') }}" method="POST" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 items-end">
+        {{-- Diarahkan ke editor.tags.store --}}
+        <form action="{{ route('editor.tags.store') }}" method="POST" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 items-end">
             @csrf
             <div class="flex-grow w-full">
                 <label for="new_tag_name" class="block text-sm font-medium text-cream-text light:text-light-text mb-1">Nama Tag</label>
@@ -82,17 +85,18 @@
                     </thead>
                     <tbody class="divide-y divide-sienna/30 light:divide-gray-200">
                         @foreach ($tags as $tag)
-                            <tr id="tag-row-{{ $tag->tag_id }}" class="hover:bg-sienna/10 light:hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-cream-text light:text-light-text">{{ $tag->tag_id }}</td>
+                            <tr id="tag-row-{{ $tag->id }}" class="hover:bg-sienna/10 light:hover:bg-gray-50 transition-colors">
+                                {{-- Menggunakan $tag->id (primary key) untuk ID baris --}}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-cream-text light:text-light-text">{{ $tag->id }}</td>
 
                                 {{-- Inline Edit Input --}}
                                 <td class="px-6 py-4">
                                     <input type="text"
-                                           data-tag-id="{{ $tag->tag_id }}"
-                                           data-original-name="{{ $tag->name }}"
-                                           value="{{ $tag->name }}"
-                                           class="editable-tag-name bg-transparent border border-transparent focus:border-terracotta focus:ring-terracotta light:text-light-text text-cream-text w-full p-1 -m-1 rounded-md transition duration-150"
-                                           onchange="handleTagUpdate(this)">
+                                                data-tag-id="{{ $tag->id }}"
+                                                data-original-name="{{ $tag->name }}"
+                                                value="{{ $tag->name }}"
+                                                class="editable-tag-name bg-transparent border border-transparent focus:border-terracotta focus:ring-terracotta light:text-light-text text-cream-text w-full p-1 -m-1 rounded-md transition duration-150"
+                                                onchange="handleTagUpdate(this)">
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 light:text-gray-500">{{ $tag->articles_count ?? 0 }}</td>
@@ -100,15 +104,17 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
 
                                     {{-- TOMBOL EDIT AKTIF (Memfokuskan Input) --}}
+                                    {{-- Menggunakan $tag->id --}}
                                     <button type="button"
-                                            onclick="focusTagInput({{ $tag->tag_id }})"
-                                            class="text-terracotta hover:text-sienna transition cursor-pointer bg-transparent border-none p-0 inline-flex items-center"
-                                            title="Klik untuk mulai mengedit nama tag.">
-                                         <i class="fas fa-edit mr-1"></i> Edit
+                                                onclick="focusTagInput({{ $tag->id }})"
+                                                class="text-terracotta hover:text-sienna transition cursor-pointer bg-transparent border-none p-0 inline-flex items-center"
+                                                title="Klik untuk mulai mengedit nama tag.">
+                                                <i class="fas fa-edit mr-1"></i> Edit
                                     </button>
 
                                     {{-- Tombol Delete --}}
-                                    <form action="{{ route('admin.tags.delete', $tag->tag_id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus tag {{ $tag->name }}?');">
+                                    {{-- Diarahkan ke editor.tags.destroy, menggunakan objek model $tag --}}
+                                    <form action="{{ route('editor.tags.destroy', $tag) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus tag {{ $tag->name }}?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-500 hover:text-red-700 transition ml-2">
@@ -133,15 +139,13 @@
 
     /**
      * Fungsi untuk memfokuskan kursor ke input nama tag yang dapat diedit.
-     * Dipanggil saat tombol 'Edit' diklik.
      * @param {number} tagId - ID tag yang akan diedit.
      */
     function focusTagInput(tagId) {
-        // Mencari input berdasarkan atribut data-tag-id
         const input = document.querySelector(`input[data-tag-id="${tagId}"]`);
         if (input) {
             input.focus();
-            input.select(); // Memilih semua teks di dalam input agar mudah diedit
+            input.select();
         }
     }
 
@@ -154,7 +158,6 @@
         const originalName = inputElement.dataset.originalName;
 
         if (!csrfToken) {
-            // Memberikan pesan error yang lebih jelas di konsol dan alert
             console.error('Error AJAX: CSRF Token tidak ditemukan. Permintaan dibatalkan.');
             alert('Error: CSRF Token tidak ditemukan. Pastikan meta tag CSRF ada di layout utama.');
             inputElement.value = originalName;
@@ -171,24 +174,31 @@
             return;
         }
 
-        const url = `{{ url('admin/masters/tags') }}/${tagId}`;
+        // PERBAIKAN URL AJAX: Diarahkan ke 'editor'
+        const url = `{{ url('editor/masters/tags') }}/${tagId}`;
         const row = document.getElementById(`tag-row-${tagId}`);
+
+        // Use FormData to properly send the request with CSRF token in body
+        const formData = new FormData();
+        formData.append('name', newName);
+        formData.append('_method', 'PUT');
+        formData.append('_token', csrfToken);
 
         // Kirim permintaan PUT ke Controller (ditangkap oleh tagUpdate)
         fetch(url, {
-            method: 'POST', // Menggunakan POST untuk mensimulasikan PUT
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                name: newName,
+            body: formData
+        })
                 _method: 'PUT' // Inilah yang memberitahu Laravel untuk menangani sebagai PUT
             })
         })
         .then(response => {
             if (!response.ok) {
+                // Jika respons bukan 2xx, coba parsing JSON untuk detail error (termasuk validasi)
                 return response.json().then(data => {
                     let errorMessage = data.message || 'Gagal memperbarui tag.';
                     if (data.errors && data.errors.name) {
@@ -197,11 +207,12 @@
                     throw new Error(errorMessage);
                 });
             }
+            // Jika berhasil, respons yang diharapkan adalah JSON (karena ini AJAX)
             return response.json();
         })
         .then(data => {
             // Sukses: Update nama asli dan feedback visual
-            console.log(data.message);
+            console.log(data.message); // Jika controller mengembalikan pesan sukses JSON
             inputElement.dataset.originalName = newName;
 
             if (row) {
@@ -215,7 +226,7 @@
             // Gagal: Feedback error dan kembalikan nilai input
             console.error('Error:', error);
             alert(`Gagal Update: ${error.message}`);
-            inputElement.value = originalName;
+            inputElement.value = originalName; // Kembalikan nilai ke semula
 
             if (row) {
                 row.classList.add('bg-red-700/30');

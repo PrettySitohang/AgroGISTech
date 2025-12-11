@@ -79,7 +79,10 @@
 
                                 {{-- Kolom Aksi --}}
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    {{-- Tautan Edit DIHILANGKAN untuk Admin --}}
+                                    {{-- Tautan Edit --}}
+                                    <a href="{{ route('admin.articles.edit', $article->id) }}" class="text-terracotta hover:text-sienna transition" title="Edit Artikel">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
 
                                     {{-- Tautan Hapus (Force Delete) --}}
                                     <form action="{{ route('admin.articles.delete.force', $article->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini permanen (Force Delete).');">

@@ -10,11 +10,13 @@ return new class extends Migration
     {
         Schema::table('articles', function (Blueprint $table) {
             // Menambahkan foreign key category_id setelah kolom 'status'
-            $table->foreignId('category_id')
-                  ->nullable() // Memungkinkan artikel lama tanpa kategori
-                  ->after('status')
-                  ->constrained() // Mengasumsikan ada tabel 'categories'
-                  ->onDelete('set null');
+            if (!Schema::hasColumn('articles', 'category_id')) {
+                $table->foreignId('category_id')
+                      ->nullable() // Memungkinkan artikel lama tanpa kategori
+                      ->after('status')
+                      ->constrained() // Mengasumsikan ada tabel 'categories'
+                      ->onDelete('set null');
+            }
         });
     }
 
@@ -22,8 +24,12 @@ return new class extends Migration
     {
         Schema::table('articles', function (Blueprint $table) {
             // Hapus foreign key constraint dan kolom saat rollback
-            $table->dropForeign(['category_id']);
-            $table->dropColumn('category_id');
+            if (Schema::hasColumn('articles', 'category_id')) {
+                // Drop foreign key constraint jika ada
+                $table->dropForeign(['category_id']);
+                // Drop column
+                $table->dropColumn('category_id');
+            }
         });
     }
 };

@@ -68,12 +68,16 @@
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
 
-                                    <form action="{{ route('penulis.articles.submit', $article) }}" method="POST" class="inline" onsubmit="return confirm('Ajukan artikel untuk di-review?');">
-                                        @csrf
-                                        <button type="submit" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                                            <i class="fas fa-paper-plane"></i> Ajukan
-                                        </button>
-                                    </form>
+                                    @if (empty($article->submitted_for_review))
+                                        <form action="{{ route('penulis.articles.submit', $article) }}" method="POST" class="inline" onsubmit="return confirm('Ajukan artikel untuk di-review?');">
+                                            @csrf
+                                            <button type="submit" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                                <i class="fas fa-paper-plane"></i> Ajukan
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Sudah Diajukan</span>
+                                    @endif
 
                                     <form action="{{ route('penulis.articles.delete', $article) }}" method="POST" class="inline" onsubmit="return confirm('Hapus draf ini?');">
                                         @csrf

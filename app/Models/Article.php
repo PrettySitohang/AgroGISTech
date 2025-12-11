@@ -23,11 +23,16 @@ class Article extends Model
         'editor_id',
         'published_at',
         'cover_image',
-        'category_id'
+        'category_id',
+        'submitted_for_review'
     ];
 
     protected $casts = [
         'published_at' => 'datetime'
+    ];
+
+    protected $attributes = [
+        'submitted_for_review' => false,
     ];
 
     public function author(): BelongsTo
@@ -43,11 +48,6 @@ class Article extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
-    }
-
-    public function categories()
-    {
-        return $this->category();
     }
 
     public function tags(): BelongsToMany

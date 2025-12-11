@@ -82,13 +82,13 @@
                     </thead>
                     <tbody class="divide-y divide-sienna/30 light:divide-gray-200">
                         @foreach ($tags as $tag)
-                            <tr id="tag-row-{{ $tag->tag_id }}" class="hover:bg-sienna/10 light:hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-cream-text light:text-light-text">{{ $tag->tag_id }}</td>
+                            <tr id="tag-row-{{ $tag->id }}" class="hover:bg-sienna/10 light:hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-cream-text light:text-light-text">{{ $tag->id }}</td>
 
                                 {{-- Inline Edit Input --}}
                                 <td class="px-6 py-4">
                                     <input type="text"
-                                           data-tag-id="{{ $tag->tag_id }}"
+                                           data-tag-id="{{ $tag->id }}"
                                            data-original-name="{{ $tag->name }}"
                                            value="{{ $tag->name }}"
                                            class="editable-tag-name bg-transparent border border-transparent focus:border-terracotta focus:ring-terracotta light:text-light-text text-cream-text w-full p-1 -m-1 rounded-md transition duration-150"
@@ -101,14 +101,14 @@
 
                                     {{-- TOMBOL EDIT AKTIF (Memfokuskan Input) --}}
                                     <button type="button"
-                                            onclick="focusTagInput({{ $tag->tag_id }})"
+                                            onclick="focusTagInput({{ $tag->id }})"
                                             class="text-terracotta hover:text-sienna transition cursor-pointer bg-transparent border-none p-0 inline-flex items-center"
                                             title="Klik untuk mulai mengedit nama tag.">
                                          <i class="fas fa-edit mr-1"></i> Edit
                                     </button>
 
                                     {{-- Tombol Delete --}}
-                                    <form action="{{ route('admin.tags.delete', $tag->tag_id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus tag {{ $tag->name }}?');">
+                                    <form action="{{ route('admin.tags.delete', $tag->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus tag {{ $tag->name }}?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-500 hover:text-red-700 transition ml-2">
@@ -174,18 +174,20 @@
         const url = `{{ url('admin/masters/tags') }}/${tagId}`;
         const row = document.getElementById(`tag-row-${tagId}`);
 
+        // Use FormData to properly send the request with CSRF token in body
+        const formData = new FormData();
+        formData.append('name', newName);
+        formData.append('_method', 'PUT');
+        formData.append('_token', csrfToken);
+
         // Kirim permintaan PUT ke Controller (ditangkap oleh tagUpdate)
         fetch(url, {
-            method: 'POST', // Menggunakan POST untuk mensimulasikan PUT
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                name: newName,
-                _method: 'PUT' // Inilah yang memberitahu Laravel untuk menangani sebagai PUT
-            })
+            body: formData
         })
         .then(response => {
             if (!response.ok) {

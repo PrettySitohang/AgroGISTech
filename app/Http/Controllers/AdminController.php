@@ -88,6 +88,53 @@ class AdminController extends Controller
             ->with('success', 'Pengguna baru berhasil ditambahkan: ' . $user->name);
     }
 
+    public function userEdit(User $user)
+    {
+        return view('admin.users.edit', compact('user'));
+    }
+
+    public function userUpdate(Request $request, User $user)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'role' => 'required|in:super_admin,editor,penulis',
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $user->update([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'role' => $validatedData['role'],
+        ]);
+
+        if (!empty($validatedData['password'])) {
+            $user->update(['password' => Hash::make($validatedData['password'])]);
+        }
+
+        LogService::record('user.updated', 'user', $user->id, ['name' => $user->name, 'role' => $user->role]);
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'Pengguna "' . $user->name . '" berhasil diperbarui.');
+    }
+
+    public function userDelete(User $user)
+    {
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        $name = $user->name;
+        $user->delete();
+
+        LogService::record('user.deleted', 'user', $user->id, ['name' => $name]);
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'Pengguna "' . $name . '" berhasil dihapus.');
+    }
+
     public function articleIndex()
         {
             $articles = Article::with('author', 'editor', 'category', 'tags')
@@ -109,12 +156,42 @@ class AdminController extends Controller
         }
 
 
+        public function articleEdit(Article $article)
+        {
+            $categories = Category::all();
+            $tags = Tag::all();
+            return view('admin.articles.edit', compact('article', 'categories', 'tags'));
+        }
+
+        public function articleUpdate(Request $request, Article $article)
+        {
+            $request->validate([
+                'title' => 'required|max:255',
+                'content' => 'required',
+                'status' => 'required|in:draft,review,published',
+            ]);
+
+            $article->update([
+                'title' => $request->title,
+                'content' => $request->content,
+                'status' => $request->status,
+                'published_at' => ($request->status === 'published' ? now() : $article->published_at),
+            ]);
+
+            LogService::record('article.updated', 'article', $article->id, ['title' => $article->title, 'admin' => Auth::user()->name]);
+
+            return redirect()->route('admin.articles.index')
+                ->with('success', 'Artikel "' . $article->title . '" berhasil diperbarui.');
+        }
+
+
         public function articleDelete(Article $article)
         {
+            $title = $article->title;
             $article->delete();
-            LogService::record('article.force_delete', 'article', $article->id, ['title' => $article->title]);
+            LogService::record('article.force_delete', 'article', $article->id, ['title' => $title]);
             return redirect()->route('admin.articles.index')
-                ->with('success', 'Artikel "' . $article->title . '" dihapus paksa.');
+                ->with('success', 'Artikel "' . $title . '" dihapus paksa.');
         }
 
     public function categoryIndex()
@@ -123,25 +200,35 @@ class AdminController extends Controller
         return view('admin.masters.categories.index', compact('categories'));
     }
 
+    public function categoryCreate()
+    {
+        return view('admin.masters.categories.create');
+    }
+
     public function categoryStore(Request $request)
     {
         $request->validate(['name' => 'required|unique:categories|max:255']);
-        $category = Category::create($request->all());
-        return back()->with('success', 'Kategori ' . $category->name . ' berhasil dibuat.');
+        $category = Category::create(['name' => $request->name]);
+        return redirect()->route('admin.categories.index')->with('success', 'Kategori ' . $category->name . ' berhasil dibuat.');
+    }
+
+    public function categoryShow(Category $category)
+    {
+        return redirect()->route('admin.categories.index');
     }
 
     public function categoryEdit(Category $category)
-{
-    return redirect()->route('admin.categories.index')->with([
-        'category_to_edit' => $category->category_id,
-        'info' => "Kategori '{$category->name}' dapat diedit langsung di tabel."
-    ]);
-}
+    {
+        return redirect()->route('admin.categories.index')->with([
+            'category_to_edit' => $category->id,
+            'info' => "Kategori '{$category->name}' dapat diedit langsung di tabel."
+        ]);
+    }
 
 public function categoryUpdate(Request $request, Category $category)
 {
     $validatedData = $request->validate([
-        'name' => 'required|string|max:255|unique:categories,name,' . $category->category_id . ',category_id',
+        'name' => 'required|string|max:255|unique:categories,name,' . $category->id . ',id',
     ]);
 
     $category->update($validatedData);
@@ -169,14 +256,12 @@ public function categoryUpdate(Request $request, Category $category)
     public function tagStore(Request $request)
     {
         $validatedData = $request->validate([
-        'name' => 'required|string|max:255|unique:tags,name',
+            'name' => 'required|string|max:255|unique:tags,name',
         ]);
 
         $validatedData['slug'] = Str::slug($validatedData['name']);
         $tag = Tag::create($validatedData);
-            $request->validate(['name' => 'required|unique:tags|max:255']);
-            $tag = Tag::create($request->all());
-            return back()->with('success', 'Tag ' . $tag->name . ' berhasil dibuat.');
+        return redirect()->route('admin.tags.index')->with('success', 'Tag ' . $tag->name . ' berhasil dibuat.');
     }
 
     public function tagEdit(Tag $tag)
@@ -184,7 +269,7 @@ public function categoryUpdate(Request $request, Category $category)
         // PENTING: Jika rute ini diakses secara langsung (misalnya dari history browser),
         // kita akan mengarahkan pengguna kembali ke halaman index.
         return redirect()->route('admin.tags.index')->with([
-            'tag_to_edit' => $tag->tag_id,
+            'tag_to_edit' => $tag->id,
             'info' => 'Fitur edit dilakukan langsung di tabel.'
         ]);
         // Catatan: Jika Anda tidak ingin redirect, Anda harus mengembalikan view edit.
@@ -195,7 +280,7 @@ public function categoryUpdate(Request $request, Category $category)
     {
         // 1. Validasi
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:tags,name,' . $tag->tag_id . ',tag_id',
+            'name' => 'required|string|max:255|unique:tags,name,' . $tag->id . ',id',
         ]);
 
         // Mutator di Model Tag akan mengurus pembuatan slug baru.
@@ -259,5 +344,33 @@ public function categoryUpdate(Request $request, Category $category)
         }
 
         return redirect()->route('admin.settings.index')->with('success', 'Pengaturan situs berhasil disimpan.');
+    }
+
+    public function profileEdit()
+    {
+        $user = Auth::user();
+        return view('admin.profile.edit', ['user' => $user]);
+    }
+
+    public function profileUpdate(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        if ($request->filled('password')) {
+            $user->update(['password' => Hash::make($validated['password'])]);
+        }
+
+        return redirect()->route('admin.profile.edit')->with('success', 'Profil berhasil diperbarui.');
     }
 }

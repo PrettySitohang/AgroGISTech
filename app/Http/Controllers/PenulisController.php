@@ -37,33 +37,15 @@ class PenulisController extends Controller
 
     public function articleStore(Request $request)
     {
-        $contentSource = $request->input('content_source', 'manual');
-
-        $rules = [
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'cover_image' => 'nullable|image|max:4096',
-        ];
-
-        if ($contentSource === 'manual') {
-            $rules['content'] = 'required|string';
-        } else {
-            $rules['document'] = 'required|file|mimes:pdf,docx,doc,txt|max:10240';
-        }
-
-        $validated = $request->validate($rules);
-
-        $content = '';
-
-        if ($contentSource === 'upload' && $request->hasFile('document')) {
-            $content = $this->extractTextFromDocument($request->file('document'));
-        } else {
-            $content = $request->input('content', '');
-        }
+            'content' => 'required|string',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4096',
+        ]);
 
         $validated['author_id'] = Auth::id();
         $validated['status'] = 'draft';
         $validated['slug'] = \Illuminate\Support\Str::slug($validated['title']);
-        $validated['content'] = $content;
 
         $article = Article::create($validated);
 
@@ -71,72 +53,11 @@ class PenulisController extends Controller
         if ($request->hasFile('cover_image')) {
             $file = $request->file('cover_image');
             $filename = 'article_' . $article->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public/articles', $filename);
+                \Illuminate\Support\Facades\Storage::disk('public')->putFileAs('articles', $file, $filename);
             $article->update(['cover_image' => '/storage/articles/' . $filename]);
         }
 
         return redirect()->route('penulis.articles.index')->with('success', 'Artikel berhasil disimpan sebagai draf.');
-    }
-
-    private function extractTextFromDocument($file)
-    {
-        $extension = $file->getClientOriginalExtension();
-
-        if ($extension === 'pdf') {
-            return $this->extractTextFromPDF($file);
-        } elseif (in_array($extension, ['docx', 'doc'])) {
-            return $this->extractTextFromWord($file);
-        } elseif ($extension === 'txt') {
-            return file_get_contents($file->getRealPath());
-        }
-
-        return '';
-    }
-
-    private function extractTextFromWord($file)
-    {
-        try {
-            // Membutuhkan library seperti 'phpoffice/phpword'
-            $phpWord = \PhpOffice\PhpWord\IOFactory::load($file->getRealPath());
-            $text = '';
-
-            foreach ($phpWord->getSections() as $section) {
-                foreach ($section->getElements() as $element) {
-                    $elementText = $this->getElementText($element);
-                    if ($elementText) {
-                        $text .= $elementText . "\n";
-                    }
-                }
-            }
-
-            return trim($text);
-        } catch (\Exception $e) {
-            return "Dokumen berhasil diupload. Silakan edit konten di sini.\n\n" . $file->getClientOriginalName();
-        }
-    }
-
-    private function getElementText($element)
-    {
-        if (method_exists($element, 'getText')) {
-            return $element->getText();
-        }
-
-        if (method_exists($element, 'getElements')) {
-            $text = '';
-            foreach ($element->getElements() as $subElement) {
-                $text .= $this->getElementText($subElement);
-            }
-            return $text;
-        }
-
-        return '';
-    }
-
-    private function extractTextFromPDF($file)
-    {
-        // For PDF, we'll use a simple approach - store the file and extract using command line if available
-        // For now, return a placeholder message
-        return "Document uploaded. Anda dapat mengedit konten di sini.\n\n" . $file->getClientOriginalName();
     }
 
     public function articleEdit(Article $article)
@@ -172,7 +93,7 @@ class PenulisController extends Controller
             }
             $file = $request->file('cover_image');
             $filename = 'article_' . $article->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public/articles', $filename);
+                \Illuminate\Support\Facades\Storage::disk('public')->putFileAs('articles', $file, $filename);
             $article->update(['cover_image' => '/storage/articles/' . $filename]);
         }
 
@@ -189,11 +110,11 @@ class PenulisController extends Controller
             return back()->with('error', 'Hanya draf yang dapat diajukan untuk review.');
         }
 
-        // Update status from 'draft' to 'review' for editor review queue
-        $article->update(['status' => 'review']);
-        LogService::record('article.submit', 'article', $article->id, ['status' => 'review']);
+        // Mark the draft as submitted for review (still 'draft' status)
+        $article->update(['submitted_for_review' => true]);
+        LogService::record('article.submit', 'article', $article->id, ['submitted' => true]);
 
-        return back()->with('success', 'Artikel berhasil diajukan untuk di-review oleh editor.');
+        return back()->with('success', 'Artikel berhasil diajukan untuk di-review oleh editor (masuk antrian).');
     }
 
     public function submitForReview(Article $article)

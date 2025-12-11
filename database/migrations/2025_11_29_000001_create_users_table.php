@@ -23,7 +23,7 @@ return new class extends Migration {
                 $table->id();
                 $table->string('name');
                 $table->string('email')->unique();
-                $table->string('password');
+                $table->string('password')->nullable(); // Nullable untuk Google OAuth users
                 $table->enum('role', ['super_admin','editor','penulis'])->default('penulis');
                 $table->string('google_id')->nullable()->index();
                 $table->timestamps();
